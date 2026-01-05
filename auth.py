@@ -125,7 +125,7 @@ class TickTickAuth:
 
 def init_auth_from_env() -> Optional[TickTickAuth]:
     """
-    Inicjalizuje obiekt TickTickAuth z danych ze zmiennych środowiskowych
+    Inicjalizuje obiekt TickTickAuth z danych ze zmiennych środowiskowych lub Streamlit secrets
     
     Returns:
         Obiekt TickTickAuth lub None jeśli brak wymaganych zmiennych
@@ -133,6 +133,18 @@ def init_auth_from_env() -> Optional[TickTickAuth]:
     import os
     from dotenv import load_dotenv
     
+    # Próbuj najpierw Streamlit secrets (dla Streamlit Cloud)
+    try:
+        client_id = st.secrets.get("TICKTICK_CLIENT_ID")
+        client_secret = st.secrets.get("TICKTICK_CLIENT_SECRET")
+        redirect_uri = st.secrets.get("TICKTICK_REDIRECT_URI", "http://localhost:8501")
+        
+        if client_id and client_secret:
+            return TickTickAuth(client_id, client_secret, redirect_uri)
+    except Exception:
+        pass
+    
+    # Fallback na .env (dla lokalnego uruchomienia)
     load_dotenv()
     
     client_id = os.getenv("TICKTICK_CLIENT_ID")
