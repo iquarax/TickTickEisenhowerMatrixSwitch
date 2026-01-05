@@ -155,6 +155,11 @@ def render_login_page():
     # Wygeneruj URL autoryzacji
     auth_url = st.session_state.auth_client.get_authorization_url()
     
+    # DEBUG: Pokaż wygenerowany URL
+    with st.expander("🔍 Debug: URL OAuth"):
+        st.code(auth_url)
+        st.write("Sprawdź czy redirect_uri w tym URL pasuje do tego w TickTick Developer Portal")
+    
     # Przycisk logowania
     st.markdown(f"""
     <a href="{auth_url}" target="_self">
