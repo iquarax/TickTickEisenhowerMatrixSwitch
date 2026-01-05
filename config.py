@@ -2,6 +2,10 @@
 Konfiguracja kontekstów i reguł dla Macierzy Eisenhowera
 """
 from datetime import datetime, timedelta, date, timezone
+from zoneinfo import ZoneInfo
+
+# Polska strefa czasowa
+POLAND_TZ = ZoneInfo("Europe/Warsaw")
 
 def get_today():
     """Zwraca dzisiejszą datę jako string YYYY-MM-DD"""
@@ -19,7 +23,7 @@ def get_task_date(task):
     """
     Pobiera datę zadania z pola dueDate i zwraca jako date object.
     Zwraca None jeśli zadanie nie ma daty.
-    Konwertuje z UTC na lokalną strefę czasową.
+    Konwertuje z UTC na polską strefę czasową.
     """
     due_date_str = task.get("dueDate", "")
     if not due_date_str:
@@ -29,10 +33,10 @@ def get_task_date(task):
         # TickTick używa ISO format UTC, np. "2026-01-05T23:00:00.000+0000"
         # Parsujemy jako UTC datetime
         dt_utc = datetime.fromisoformat(due_date_str.replace('Z', '+00:00'))
-        # Konwertujemy na lokalną strefę czasową
-        dt_local = dt_utc.astimezone()
+        # Konwertujemy na polską strefę czasową (jawnie)
+        dt_poland = dt_utc.astimezone(POLAND_TZ)
         # Zwracamy tylko datę (bez czasu)
-        return dt_local.date()
+        return dt_poland.date()
     except:
         return None
 

@@ -12,7 +12,7 @@ from eisenhower_matrix import (
     get_quadrant_stats,
     sort_tasks_by_deadline
 )
-from config import CONTEXTS, QUADRANTS, get_context_description
+from config import CONTEXTS, QUADRANTS, get_context_description, POLAND_TZ
 from auth import TickTickAuth, init_auth_from_env, handle_oauth_callback
 import os
 
@@ -272,10 +272,10 @@ def render_task_card(task: Dict, quadrant_key: str):
     due_str = ""
     if due_date:
         try:
-            # TickTick zwraca datę w UTC, konwertujemy na lokalną strefę czasową
+            # TickTick zwraca datę w UTC, konwertujemy na polską strefę czasową
             dt_utc = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
-            dt_local = dt_utc.astimezone()
-            due_str = f"📅 {dt_local.strftime('%d.%m.%Y')}"
+            dt_poland = dt_utc.astimezone(POLAND_TZ)
+            due_str = f"📅 {dt_poland.strftime('%d.%m.%Y')}"
         except:
             due_str = f"📅 {due_date}"
     
