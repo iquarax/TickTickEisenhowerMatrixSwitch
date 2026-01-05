@@ -5,14 +5,14 @@ Główna aplikacja Streamlit - Dashboard Macierzy Eisenhowera dla TickTick
 import streamlit as st
 from datetime import datetime
 from typing import Dict, List, Optional
-from ticktick_api import TickTickAPI
+from ticktick_api import TickTickAPI, move_task_to_quadrant
 from eisenhower_matrix import (
     filter_tasks_by_context,
     categorize_tasks_to_quadrants,
     get_quadrant_stats,
     sort_tasks_by_deadline
 )
-from config import CONTEXTS, QUADRANTS
+from config import CONTEXTS, QUADRANTS, get_context_description
 from auth import TickTickAuth, init_auth_from_env, handle_oauth_callback
 import os
 
@@ -223,16 +223,22 @@ def render_sidebar():
         # Wybór kontekstu
         st.markdown("### 📂 Wybierz Kontekst")
         context_options = {key: value["name"] for key, value in CONTEXTS.items()}
+        
+        # Znajdź index "Jutrzejsze" jako domyślny
+        context_keys = list(context_options.keys())
+        default_index = context_keys.index("Jutrzejsze") if "Jutrzejsze" in context_keys else 0
+        
         selected_context = st.selectbox(
             "Profil",
-            options=list(context_options.keys()),
+            options=context_keys,
             format_func=lambda x: context_options[x],
+            index=default_index,
             key="context_selector"
         )
         
         # Opis kontekstu
         if selected_context in CONTEXTS:
-            st.info(CONTEXTS[selected_context]["description"])
+            st.info(get_context_description(selected_context))
         
         st.markdown("---")
         
@@ -260,31 +266,95 @@ def render_task_card(task: Dict, quadrant_key: str):
     content = task.get("content", "")
     due_date = task.get("dueDate", "")
     tags = task.get("tags", [])
+    task_id = task.get("id", "")
     
     # Formatowanie daty
     due_str = ""
     if due_date:
         try:
-            due_dt = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
-            due_str = f"📅 {due_dt.strftime('%d.%m.%Y')}"
+            # TickTick zwraca datę w UTC, konwertujemy na lokalną strefę czasową
+            dt_utc = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+            dt_local = dt_utc.astimezone()
+            due_str = f"📅 {dt_local.strftime('%d.%m.%Y')}"
         except:
             due_str = f"📅 {due_date}"
     
     # Tagi
     tags_str = " ".join([f"`#{tag}`" for tag in tags]) if tags else ""
     
-    st.markdown(f"""
-    <div class="task-card">
-        <div class="task-title">{title}</div>
-        <div class="task-meta">
-            {due_str} {tags_str}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Przyciski do przenoszenia
+    quadrant_icons = {"Q1": "🏎️", "Q2": "❗", "Q3": "🧠", "Q4": "🧩"}
+    available_quadrants = [q for q in ["Q1", "Q2", "Q3", "Q4"] if q != quadrant_key]
     
+    # Layout kompaktowy
+    num_buttons = len(available_quadrants) + (1 if content else 0)  # +1 dla opisu jeśli istnieje
+    col_task, *col_buttons = st.columns([4] + [0.3] * num_buttons)
+    
+    with col_task:
+        st.markdown(f"""
+        <div class="task-card">
+            <div class="task-title">{title}</div>
+            <div class="task-meta">
+                {due_str} {tags_str}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Kompaktowe przyciski obok zadania
+    for idx, target_q in enumerate(available_quadrants):
+        with col_buttons[idx]:
+            if st.button(
+                quadrant_icons[target_q],
+                key=f"move_{task_id}_{target_q}",
+                help=f"{QUADRANTS[target_q]['name']}",
+                use_container_width=True
+            ):
+                # Przenieś zadanie
+                with st.spinner("⏳"):
+                    updated_task = move_task_to_quadrant(st.session_state.api, task, target_q)
+                    if updated_task:
+                        # Zaktualizuj zadanie w cache lokalnie
+                        for i, cached_task in enumerate(st.session_state.tasks_cache):
+                            if cached_task.get("id") == task_id:
+                                st.session_state.tasks_cache[i] = updated_task
+                                break
+                        
+                        st.session_state.last_refresh = datetime.now()
+                        st.rerun()
+                    else:
+                        st.error("Błąd")
+    
+    # Przycisk opisu (jeśli zadanie ma opis)
     if content:
-        with st.expander("📝 Opis"):
-            st.write(content)
+        with col_buttons[len(available_quadrants)]:
+            desc_key = f"desc_{task_id}"
+            if st.button(
+                "📝",
+                key=f"show_desc_{task_id}",
+                help="Pokaż opis",
+                use_container_width=True
+            ):
+                # Toggle widoczności opisu w session state
+                if desc_key not in st.session_state:
+                    st.session_state[desc_key] = False
+                st.session_state[desc_key] = not st.session_state[desc_key]
+        
+        # Pokaż opis jeśli jest aktywny
+        if st.session_state.get(desc_key, False):
+            st.markdown(f"""
+            <div style="
+                background-color: #f8f9fa;
+                border-left: 4px solid #6c757d;
+                padding: 12px 16px;
+                margin: 8px 0;
+                border-radius: 4px;
+                font-size: 0.9em;
+                color: #495057;
+            ">
+                <strong>📄 Opis:</strong><br>
+                {content.replace(chr(10), '<br>')}
+            </div>
+            """, unsafe_allow_html=True)
 
 
 def render_quadrant(quadrant_key: str, tasks: List[Dict]):

@@ -147,6 +147,66 @@ class TickTickAPI:
         except requests.exceptions.RequestException as e:
             print(f"Błąd pobierania projektów: {e}")
             return []
+    
+    def update_task_tags(self, task_id: str, project_id: str, new_tags: List[str], original_task: Dict = None) -> Optional[Dict]:
+        """
+        Aktualizuje tagi zadania
+        
+        Args:
+            task_id: ID zadania
+            project_id: ID projektu
+            new_tags: Lista nowych tagów (bez #)
+            original_task: Oryginalne dane zadania (aby zachować inne pola)
+            
+        Returns:
+            Zaktualizowane dane zadania jeśli sukces, None w przeciwnym razie
+        """
+        try:
+            # Dane do aktualizacji - zachowaj ważne pola z oryginalnego zadania
+            data = {
+                "id": task_id,
+                "projectId": project_id,
+                "tags": new_tags
+            }
+            
+            # Jeśli mamy oryginalne zadanie, zachowaj ważne pola
+            if original_task:
+                # Zachowaj datę bez zmiany czasu
+                if "startDate" in original_task:
+                    data["startDate"] = original_task["startDate"]
+                if "dueDate" in original_task:
+                    data["dueDate"] = original_task["dueDate"]
+                # Zachowaj flagę "isAllDay" jeśli istnieje
+                if "isAllDay" in original_task:
+                    data["isAllDay"] = original_task["isAllDay"]
+                # Zachowaj tytuł i inne podstawowe pola
+                if "title" in original_task:
+                    data["title"] = original_task["title"]
+                if "content" in original_task:
+                    data["content"] = original_task["content"]
+            
+            print(f"DEBUG: Aktualizacja tagów zadania {task_id}")
+            print(f"DEBUG: Nowe tagi: {new_tags}")
+            print(f"DEBUG: isAllDay: {data.get('isAllDay', 'brak')}")
+            print(f"DEBUG: URL: {self.base_url}/task/{task_id}")
+            
+            response = requests.post(
+                f"{self.base_url}/task/{task_id}",
+                headers=self.headers,
+                json=data,
+                timeout=10
+            )
+            
+            print(f"DEBUG: Status odpowiedzi: {response.status_code}")
+            print(f"DEBUG: Treść odpowiedzi: {response.text[:200]}")
+            
+            response.raise_for_status()
+            return response.json()  # Zwracamy zaktualizowane dane zadania
+        except requests.exceptions.RequestException as e:
+            print(f"Błąd aktualizacji tagów zadania: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"DEBUG: Treść błędu: {e.response.text}")
+            return None
 
 
 def parse_task_tags(task: Dict) -> List[str]:
@@ -187,3 +247,58 @@ def is_task_completed(task: Dict) -> bool:
         True jeśli wykonane
     """
     return task.get("status", 0) == 2  # Status 2 = completed
+
+
+def move_task_to_quadrant(api: 'TickTickAPI', task: Dict, target_quadrant: str) -> Optional[Dict]:
+    """
+    Przenosi zadanie do innej ćwiartki poprzez aktualizację tagów
+    
+    Args:
+        api: Instancja TickTickAPI
+        task: Słownik z danymi zadania
+        target_quadrant: Docelowa ćwiartka (Q1, Q2, Q3, Q4)
+        
+    Returns:
+        Zaktualizowane dane zadania jeśli sukces, None w przeciwnym razie
+    """
+    # Mapowanie ćwiartek na tagi
+    quadrant_tags = {
+        "Q1": "fast",
+        "Q2": "important",
+        "Q3": "think",
+        "Q4": None  # Brak tagu specjalnego
+    }
+    
+    task_id = task.get("id")
+    project_id = task.get("projectId")
+    task_title = task.get("title", "")
+    
+    print(f"\n=== PRZENOSZENIE ZADANIA ===")
+    print(f"Zadanie: {task_title}")
+    print(f"Task ID: {task_id}")
+    print(f"Project ID: {project_id}")
+    print(f"Docelowa ćwiartka: {target_quadrant}")
+    
+    if not task_id or not project_id:
+        print("BŁĄD: Brak task_id lub project_id")
+        return None
+    
+    # Pobierz aktualne tagi (bez #)
+    current_tags = task.get("tags", [])
+    print(f"Aktualne tagi: {current_tags}")
+    
+    # Usuń stare tagi ćwiartek
+    special_tags = {"fast", "important", "think"}
+    new_tags = [tag for tag in current_tags if tag not in special_tags]
+    
+    # Dodaj nowy tag (jeśli nie jest Q4)
+    target_tag = quadrant_tags.get(target_quadrant)
+    if target_tag:
+        new_tags.append(target_tag)
+    
+    print(f"Nowe tagi: {new_tags}")
+    
+    # Aktualizuj w TickTick - przekaż oryginalne zadanie aby zachować wszystkie pola
+    updated_task = api.update_task_tags(task_id, project_id, new_tags, original_task=task)
+    print(f"Wynik aktualizacji: {updated_task is not None}")
+    return updated_task

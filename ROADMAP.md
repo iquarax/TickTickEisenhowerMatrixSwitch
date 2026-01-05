@@ -30,10 +30,16 @@
     - 
 
 ## ROZWÓJ FUNKCJONALNOŚCI W MENU GŁÓWNYM
-    - Zmienić aplikację tak, aby było normalne logowanie jak do ticktick (login i hasło)
-    - Wrzucić aplikację na GitHub
-    - Zdeployować aplikację na Netlify
+    - ✅Zmienić aplikację tak, aby było normalne logowanie jak do ticktick (login i hasło)
+    - ✅Wrzucić aplikację na GitHub
+    - ✅Zdeployować aplikację na Streamlit
+    - ✅Sprawdzić czy rzeczywiście się loguję do ticktick app czy pozwalam każdemu na dostęp
+    - ✅Sprawdzić czy działają obie aplikacje:
+        - ✅lokalna
+        - ✅na streamlist
+    - Dodać do konfiguracji daty (na razie są tylko tagi)        
+    - Skonfigurować tą aplikację na własnej domenie iquarax.pl
     - Wprowadzić wersjonowanie aplikacji
     - Wprowadzić changelog  dla tej aplikacji
-    - Dodać do konfiguracji daty (na razie są tylko tagi)
+    
 

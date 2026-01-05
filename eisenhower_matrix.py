@@ -3,13 +3,13 @@ Logika Macierzy Eisenhowera
 """
 
 from typing import List, Dict
-from config import PRIORITY_MAPPING, CONTEXTS
-from ticktick_api import parse_task_tags, get_task_priority, is_task_completed
+from config import TAG_MAPPING, CONTEXTS, date_filter_function
+from ticktick_api import parse_task_tags, is_task_completed
 
 
 def filter_tasks_by_context(tasks: List[Dict], context_key: str) -> List[Dict]:
     """
-    Filtruje zadania według wybranego kontekstu
+    Filtruje zadania według wybranego kontekstu (na podstawie daty)
     
     Args:
         tasks: Lista wszystkich zadań
@@ -21,25 +21,18 @@ def filter_tasks_by_context(tasks: List[Dict], context_key: str) -> List[Dict]:
     if context_key not in CONTEXTS:
         return tasks
     
-    context_tags = CONTEXTS[context_key]["tags"]
+    # Pobierz funkcję filtrującą dla tego kontekstu
+    filter_func = date_filter_function(context_key)
     
-    # Jeśli kontekst nie ma tagów (np. "Wszystkie"), zwróć wszystkie
-    if not context_tags:
-        return tasks
-    
-    filtered = []
-    for task in tasks:
-        task_tags = parse_task_tags(task)
-        # Sprawdź czy którykolwiek tag zadania jest w tagach kontekstu
-        if any(tag in context_tags for tag in task_tags):
-            filtered.append(task)
+    # Filtruj zadania używając funkcji
+    filtered = [task for task in tasks if filter_func(task)]
     
     return filtered
 
 
 def categorize_tasks_to_quadrants(tasks: List[Dict]) -> Dict[str, List[Dict]]:
     """
-    Segreguje zadania do odpowiednich ćwiartek Macierzy Eisenhowera
+    Segreguje zadania do odpowiednich ćwiartek Macierzy Eisenhowera na podstawie tagów
     
     Args:
         tasks: Lista zadań do kategoryzacji
@@ -59,9 +52,19 @@ def categorize_tasks_to_quadrants(tasks: List[Dict]) -> Dict[str, List[Dict]]:
         if is_task_completed(task):
             continue
         
-        priority = get_task_priority(task)
-        quadrant = PRIORITY_MAPPING.get(priority, "Q4")
-        quadrants[quadrant].append(task)
+        # Pobierz tagi zadania
+        task_tags = parse_task_tags(task)
+        
+        # Kategoryzuj na podstawie tagów (priorytet: fast > important > think > bez tagów)
+        if "#fast" in task_tags:
+            quadrants["Q1"].append(task)
+        elif "#important" in task_tags:
+            quadrants["Q2"].append(task)
+        elif "#think" in task_tags:
+            quadrants["Q3"].append(task)
+        else:
+            # Zadania bez tagów lub z innymi tagami
+            quadrants["Q4"].append(task)
     
     return quadrants
 
