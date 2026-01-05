@@ -135,25 +135,37 @@ def init_auth_from_env() -> Optional[TickTickAuth]:
     
     # Próbuj najpierw Streamlit secrets (dla Streamlit Cloud)
     try:
+        print("[DEBUG] Próba odczytu z st.secrets...")
         client_id = st.secrets.get("TICKTICK_CLIENT_ID")
         client_secret = st.secrets.get("TICKTICK_CLIENT_SECRET")
         redirect_uri = st.secrets.get("TICKTICK_REDIRECT_URI", "http://localhost:8501")
         
+        print(f"[DEBUG] Client ID z secrets: {client_id[:10] if client_id else 'BRAK'}...")
+        print(f"[DEBUG] Client Secret z secrets: {client_secret[:10] if client_secret else 'BRAK'}...")
+        print(f"[DEBUG] Redirect URI z secrets: {redirect_uri}")
+        
         if client_id and client_secret:
+            print("[DEBUG] Sekrety znalezione w st.secrets!")
             return TickTickAuth(client_id, client_secret, redirect_uri)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[DEBUG] Błąd odczytu st.secrets: {e}")
     
     # Fallback na .env (dla lokalnego uruchomienia)
+    print("[DEBUG] Próba odczytu z .env...")
     load_dotenv()
     
     client_id = os.getenv("TICKTICK_CLIENT_ID")
     client_secret = os.getenv("TICKTICK_CLIENT_SECRET")
     redirect_uri = os.getenv("TICKTICK_REDIRECT_URI", "http://localhost:8501")
     
+    print(f"[DEBUG] Client ID z .env: {client_id[:10] if client_id else 'BRAK'}...")
+    print(f"[DEBUG] Client Secret z .env: {client_secret[:10] if client_secret else 'BRAK'}...")
+    
     if not client_id or not client_secret:
+        print("[DEBUG] Brak sekretów!")
         return None
     
+    print("[DEBUG] Sekrety znalezione w .env!")
     return TickTickAuth(client_id, client_secret, redirect_uri)
 
 
