@@ -93,6 +93,19 @@ def render_login_page():
     """Renderuje stronę logowania OAuth2"""
     st.title("🔐 Logowanie do TickTick")
     
+    # DEBUG: Pokaż informacje o konfiguracji
+    with st.expander("🔍 Debug: Konfiguracja"):
+        try:
+            client_id = st.secrets.get("TICKTICK_CLIENT_ID", "BRAK")
+            client_secret = st.secrets.get("TICKTICK_CLIENT_SECRET", "BRAK")
+            redirect_uri = st.secrets.get("TICKTICK_REDIRECT_URI", "BRAK")
+            st.write(f"Client ID: {client_id[:10] if client_id != 'BRAK' else 'BRAK'}...")
+            st.write(f"Client Secret: {client_secret[:10] if client_secret != 'BRAK' else 'BRAK'}...")
+            st.write(f"Redirect URI: {redirect_uri}")
+            st.write(f"auth_client: {st.session_state.auth_client}")
+        except Exception as e:
+            st.error(f"Błąd odczytu secrets: {e}")
+    
     # Sprawdź czy mamy potrzebne dane konfiguracyjne
     if not st.session_state.auth_client:
         st.error("⚠️ Brak konfiguracji OAuth2!")
