@@ -1,0 +1,39 @@
+> ℹ️ **LEGENDA DLA OZNACZEŃ GRAFICZNYCH**
+> 
+> ### Skala priorytetów
+>    - 🔴 KRYTYCZNE - błędy blokujące, problemy produkcyjne
+>    - 🟠 WYSOKIE - usprawnienia techniczne, refaktoring
+>    - 🟡 ŚREDNIE - optymalizacje, monitoring
+>    - 🟢 NISKIE - nowe funkcjonalności, ulepszenia UX
+>    - 🔵 BARDZO NISKIE - dokumentacja, nice-to-have
+>    - 🟣 PRZYSZŁOŚCIOWE - długoterminowe plany, research
+>    - ⚪ OPCJONALNE/BACKLOG - pomysły do rozważenia, zadania bez terminu
+> ### Status realizacji
+>    - ✅ UKOŃCZONE - zadania zrealizowane
+>    - ⏳ W TRAKCIE - zadania rozpoczęte, realizowane
+>    - 📋 PRZYGOTOWANE - zadania gotowe do rozpoczęcia
+>    - 🔒 WSTRZYMANE - zadania tymczasowo zatrzymane
+> ### Informacyjne
+>    - ℹ️ INFORMACJA
+>    - ⚠️ UWAGA - wymaga szczególnej ostrożności
+>    - 💡 POMYSŁ - ciekawa idea do rozważenia
+>    - 🤔 DO PRZEMYŚLENIA - wymaga analizy
+
+
+
+
+
+## POPRAWA BŁĘDÓW
+    - 
+
+## TECHNICZNE
+    - 
+
+## ROZWÓJ FUNKCJONALNOŚCI W MENU GŁÓWNYM
+    - Zmienić aplikację tak, aby było normalne logowanie jak do ticktick (login i hasło)
+    - Wrzucić aplikację na GitHub
+    - Zdeployować aplikację na Netlify
+    - Wprowadzić wersjonowanie aplikacji
+    - Wprowadzić changelog  dla tej aplikacji
+    - Dodać do konfiguracji daty (na razie są tylko tagi)
+
