@@ -160,26 +160,12 @@ def render_login_page():
         st.code(auth_url)
         st.write("Sprawdź czy redirect_uri w tym URL pasuje do tego w TickTick Developer Portal")
     
-    # Przycisk logowania
-    st.markdown(f"""
-    <a href="{auth_url}" target="_self">
-        <button style="
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 15px 32px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 8px;
-        ">
-            🔐 Zaloguj się przez TickTick
-        </button>
-    </a>
-    """, unsafe_allow_html=True)
+    # Przycisk logowania - użyj natywnego Streamlit
+    st.link_button(
+        "🔐 Zaloguj się przez TickTick",
+        auth_url,
+        use_container_width=True
+    )
     
     st.markdown("---")
     st.info("💡 Twoje dane logowania nie są przechowywane na dysku - tylko w sesji przeglądarki.")
