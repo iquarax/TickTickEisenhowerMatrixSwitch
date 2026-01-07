@@ -43,7 +43,11 @@
         Widać w konsoli logów streamlit, że tam mają inną godzinę
     - ✅Skonfigurować tą aplikację na własnej domenie iquarax.pl - przekierowanie na netlify, to nic, że potem pojawi się inny adres
         - ✅Wszystko jest skonfigurowane, czekam na propagację domeny
-    - Przydałaby się też możliwość zmiany daty z poziomu tej aplikacji, tak żeby zaległe zadanie przełożyć na dzisiaj, lub dzisiejsz/jutrzejsze na przyszłość        
+    - Przydałaby się też możliwość zmiany daty z poziomu tej aplikacji    
+        To jest skomplikowany temat i testowanie bardzo długo trwa, więc kolejne kroki:
+            - niech AI napisze test testujący aktualizację daty w pojedynczym zadaniu i sprawdzaj na ticktick czy ona się dobrze zaktualizowała.
+            - jak powyższe zadziała, to poproś, żeby wprowadził taką aktualizacją w aplikacji pod dodatkową ikonką kalendarza
+            - sprawdź czy działa aktualizacja w aplikacji i w tick tick   
     - Sprawdzić jak ta aplikacja wygląda na telefonie
         - Elementy nie są skalowane na małym ekranie telefonu
     - Wprowadzić wersjonowanie aplikacji
