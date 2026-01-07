@@ -37,8 +37,15 @@
     - ✅Sprawdzić czy działają obie aplikacje:
         - ✅lokalna
         - ✅na streamlist
-    - Dodać do konfiguracji daty (na razie są tylko tagi)        
-    - Skonfigurować tą aplikację na własnej domenie iquarax.pl
+    - ✅Dodać do konfiguracji daty (na razie są tylko tagi)     
+    - ✅BŁĘDY:
+        - ✅Coś jest nie tak na Streamlit - jutrzejszee zadania pokazywane są jako dzisiejsze - to jest chyba ten sam problem z datą co na lokalnym środowisku był. Trzeba to poprawić tak, żeby działało i na lokalnym i na streamlist
+        Widać w konsoli logów streamlit, że tam mają inną godzinę
+    - ✅Skonfigurować tą aplikację na własnej domenie iquarax.pl - przekierowanie na netlify, to nic, że potem pojawi się inny adres
+        - ✅Wszystko jest skonfigurowane, czekam na propagację domeny
+    - Przydałaby się też możliwość zmiany daty z poziomu tej aplikacji, tak żeby zaległe zadanie przełożyć na dzisiaj, lub dzisiejsz/jutrzejsze na przyszłość        
+    - Sprawdzić jak ta aplikacja wygląda na telefonie
+        - Elementy nie są skalowane na małym ekranie telefonu
     - Wprowadzić wersjonowanie aplikacji
     - Wprowadzić changelog  dla tej aplikacji
     
