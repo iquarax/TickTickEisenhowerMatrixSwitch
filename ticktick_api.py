@@ -207,6 +207,78 @@ class TickTickAPI:
             if hasattr(e, 'response') and e.response is not None:
                 print(f"DEBUG: Treść błędu: {e.response.text}")
             return None
+    
+    def update_task_date(self, task_id: str, project_id: str, new_date: str, original_task: Dict = None) -> Optional[Dict]:
+        """
+        Aktualizuje datę zadania (startDate i dueDate)
+        
+        Args:
+            task_id: ID zadania
+            project_id: ID projektu
+            new_date: Nowa data w formacie ISO (YYYY-MM-DDTHH:MM:SS.000+0000)
+            original_task: Oryginalne dane zadania (aby zachować inne pola)
+            
+        Returns:
+            Zaktualizowane dane zadania jeśli sukces, None w przeciwnym razie
+        """
+        try:
+            # Dane do aktualizacji - zachowaj wszystkie ważne pola
+            data = {
+                "id": task_id,
+                "projectId": project_id,
+                "startDate": new_date,
+                "dueDate": new_date
+            }
+            
+            # Jeśli mamy oryginalne zadanie, zachowaj wszystkie pozostałe pola
+            if original_task:
+                # Zachowaj podstawowe pola
+                if "title" in original_task:
+                    data["title"] = original_task["title"]
+                if "content" in original_task:
+                    data["content"] = original_task["content"]
+                if "desc" in original_task:
+                    data["desc"] = original_task["desc"]
+                
+                # Zachowaj ustawienia czasu
+                if "timeZone" in original_task:
+                    data["timeZone"] = original_task["timeZone"]
+                if "isAllDay" in original_task:
+                    data["isAllDay"] = original_task["isAllDay"]
+                
+                # Zachowaj priorytet i status
+                if "priority" in original_task:
+                    data["priority"] = original_task["priority"]
+                if "status" in original_task:
+                    data["status"] = original_task["status"]
+                
+                # Zachowaj tagi
+                if "tags" in original_task:
+                    data["tags"] = original_task["tags"]
+                
+                # Zachowaj przypomnienia
+                if "reminders" in original_task:
+                    data["reminders"] = original_task["reminders"]
+            
+            print(f"DEBUG: Aktualizacja daty zadania {task_id}")
+            print(f"DEBUG: Nowa data: {new_date}")
+            
+            response = requests.post(
+                f"{self.base_url}/task/{task_id}",
+                headers=self.headers,
+                json=data,
+                timeout=10
+            )
+            
+            print(f"DEBUG: Status odpowiedzi: {response.status_code}")
+            
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Błąd aktualizacji daty zadania: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"DEBUG: Treść błędu: {e.response.text}")
+            return None
 
 
 def parse_task_tags(task: Dict) -> List[str]:

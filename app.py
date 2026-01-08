@@ -270,11 +270,13 @@ def render_task_card(task: Dict, quadrant_key: str):
     
     # Formatowanie daty
     due_str = ""
+    current_date_obj = None
     if due_date:
         try:
             # TickTick zwraca datę w UTC, konwertujemy na polską strefę czasową
             dt_utc = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
             dt_poland = dt_utc.astimezone(POLAND_TZ)
+            current_date_obj = dt_poland.date()
             due_str = f"📅 {dt_poland.strftime('%d.%m.%Y')}"
         except:
             due_str = f"📅 {due_date}"
@@ -286,8 +288,8 @@ def render_task_card(task: Dict, quadrant_key: str):
     quadrant_icons = {"Q1": "🏎️", "Q2": "❗", "Q3": "🧠", "Q4": "🧩"}
     available_quadrants = [q for q in ["Q1", "Q2", "Q3", "Q4"] if q != quadrant_key]
     
-    # Layout kompaktowy
-    num_buttons = len(available_quadrants) + (1 if content else 0)  # +1 dla opisu jeśli istnieje
+    # Layout kompaktowy - dodajemy +1 dla ikony kalendarza
+    num_buttons = len(available_quadrants) + 1 + (1 if content else 0)  # +1 dla kalendarza, +1 dla opisu jeśli istnieje
     col_task, *col_buttons = st.columns([4] + [0.3] * num_buttons)
     
     with col_task:
@@ -324,9 +326,79 @@ def render_task_card(task: Dict, quadrant_key: str):
                     else:
                         st.error("Błąd")
     
+    # Przycisk kalendarza do zmiany daty
+    with col_buttons[len(available_quadrants)]:
+        date_key = f"date_picker_{task_id}"
+        if st.button(
+            "📆",
+            key=f"show_date_{task_id}",
+            help="Zmień datę",
+            use_container_width=True
+        ):
+            # Toggle widoczności date pickera w session state
+            if date_key not in st.session_state:
+                st.session_state[date_key] = False
+            st.session_state[date_key] = not st.session_state[date_key]
+    
+    # Pokaż date picker jeśli jest aktywny
+    if st.session_state.get(date_key, False):
+        col_date, col_date_btn = st.columns([3, 1])
+        with col_date:
+            new_date = st.date_input(
+                "Nowa data",
+                value=current_date_obj if current_date_obj else datetime.now().date(),
+                key=f"date_input_{task_id}",
+                label_visibility="collapsed"
+            )
+        with col_date_btn:
+            if st.button("✅", key=f"confirm_date_{task_id}", help="Potwierdź zmianę daty"):
+                # Konwertuj wybraną datę na format TickTick
+                # Zachowaj oryginalną godzinę jeśli istnieje, w przeciwnym razie ustaw 12:00
+                if due_date:
+                    try:
+                        dt_utc = datetime.fromisoformat(due_date.replace('Z', '+00:00'))
+                        # Zachowaj godzinę z oryginalnej daty
+                        new_datetime = datetime.combine(new_date, dt_utc.time())
+                    except:
+                        new_datetime = datetime.combine(new_date, datetime.min.time().replace(hour=12))
+                else:
+                    new_datetime = datetime.combine(new_date, datetime.min.time().replace(hour=12))
+                
+                # Konwertuj na UTC i format ISO
+                from zoneinfo import ZoneInfo
+                poland_tz = ZoneInfo("Europe/Warsaw")
+                dt_poland = new_datetime.replace(tzinfo=poland_tz)
+                dt_utc_new = dt_poland.astimezone(ZoneInfo("UTC"))
+                new_date_str = dt_utc_new.strftime("%Y-%m-%dT%H:%M:%S.000+0000")
+                
+                # Aktualizuj datę w TickTick
+                with st.spinner("⏳ Aktualizuję datę..."):
+                    project_id = task.get("projectId")
+                    updated_task = st.session_state.api.update_task_date(
+                        task_id, 
+                        project_id, 
+                        new_date_str, 
+                        original_task=task
+                    )
+                    
+                    if updated_task:
+                        # Zaktualizuj zadanie w cache lokalnie
+                        for i, cached_task in enumerate(st.session_state.tasks_cache):
+                            if cached_task.get("id") == task_id:
+                                st.session_state.tasks_cache[i] = updated_task
+                                break
+                        
+                        # Zamknij date picker
+                        st.session_state[date_key] = False
+                        st.session_state.last_refresh = datetime.now()
+                        st.success("✅ Data zaktualizowana!")
+                        st.rerun()
+                    else:
+                        st.error("❌ Błąd aktualizacji daty")
+    
     # Przycisk opisu (jeśli zadanie ma opis)
     if content:
-        with col_buttons[len(available_quadrants)]:
+        with col_buttons[len(available_quadrants) + 1]:
             desc_key = f"desc_{task_id}"
             if st.button(
                 "📝",
